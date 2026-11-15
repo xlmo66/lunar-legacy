@@ -3,8 +3,7 @@
 > **Mapping, cataloging, and protecting humanity's historic spacecraft, rovers, and landing sites across the Moon and Mars.**  
 > *Built for the NASA Space Apps Challenge*
 
-**Live Interactive App:** [https://xlmo66.github.io/lunar-legacy/](https://xlmo66.github.io/lunar-legacy/)
-
+**Live Interactive App:** https://github.com/xlmo66/lunar-legacy/blob/main/lunar_legacy_interactive_off_world_heritage_atlas.html
 ---
 
  Overview
