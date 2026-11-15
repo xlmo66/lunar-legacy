@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LUNAR LEGACY // Off-World Heritage & Telemetry Atlas</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Syne, Space Grotesk, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Syne', 'sans-serif'],
+            sans: ['Space Grotesk', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            space: {
+              950: '#060913',
+              900: '#0B1021',
+              800: '#0F172A',
+              700: '#1E293B',
+            },
+            telemetry: {
+              cyan: '#38BDF8',
+              amber: '#F59E0B',
+              emerald: '#10B981',
+              rose: '#F43F5E',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background-color: #060913;
+      color: #F8FAFC;
+      font-family: 'Space Grotesk', sans-serif;
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 25%, rgba(245, 158, 11, 0.07) 0%, transparent 45%),
+        linear-gradient(rgba(30, 41, 59, 0.22) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(30, 41, 59, 0.22) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+    }
+
+    /* Custom Range Slider */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 999px;
+      background: #1E293B;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 18px;
+      width: 18px;
+      border-radius: 50%;
+      background: #38BDF8;
+      border: 2px solid #060913;
+      margin-top: -6px;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.7);
+    }
+
+    /* Map Pin Pulse Animation */
+    @keyframes pulseRing {
+      0% { transform: scale(0.8); opacity: 0.9; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+    .pin-pulse {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: pulseRing 2.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #060913; }
+    ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #38BDF8; }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-telemetry-cyan selection:text-space-950">
+
+  <!-- Toast Notification Banner (Replaces alert()) -->
+  <div id="toastBanner" class="fixed bottom-5 right-5 z-50 hidden transform transition-all duration-300 translate-y-4 opacity-0">
+    <div class="bg-space-800 border border-telemetry-cyan/60 text-slate-100 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 max-w-md">
+      <i class="fa-solid fa-satellite-dish text-telemetry-cyan"></i>
+      <span id="toastMessage" class="text-sm font-medium">Telemetry exported.</span>
+    </div>
+  </div>
+
+  <!-- Top Mission Control Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-space-950/85 backdrop-blur-md border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-telemetry-cyan/20 to-telemetry-amber/20 border border-telemetry-cyan/40 flex items-center justify-center text-telemetry-cyan">
+          <i class="fa-solid fa-moon text-base"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-display font-extrabold text-lg sm:text-xl tracking-tight text-white">LUNAR LEGACY</span>
+            <span class="hidden sm:inline-block font-mono text-[11px] font-bold uppercase px-2 py-0.5 rounded bg-telemetry-amber/15 text-telemetry-amber border border-telemetry-amber/30">
+              NASA SPACE APPS
+            </span>
+          </div>
+          <p class="text-[11px] font-mono text-slate-400 hidden md:block">OFF-WORLD ARCHAEOLOGY &amp; HERITAGE TELEMETRY SYSTEM</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button id="exportJsonBtn" class="px-3 py-2 rounded-lg bg-space-800 hover:bg-space-700 border border-slate-700 text-xs sm:text-sm font-mono text-slate-200 flex items-center gap-2 transition">
+          <i class="fa-solid fa-file-code text-telemetry-cyan"></i>
+          <span class="hidden sm:inline">Export Registry (JSON)</span>
+          <span class="sm:hidden">JSON</span>
+        </button>
+        <button id="exportCsvBtn" class="px-3 py-2 rounded-lg bg-telemetry-cyan/15 hover:bg-telemetry-cyan/25 border border-telemetry-cyan/40 text-xs sm:text-sm font-mono text-telemetry-cyan flex items-center gap-2 transition">
+          <i class="fa-solid fa-table text-telemetry-cyan"></i>
+          <span class="hidden sm:inline">Export CSV</span>
+          <span class="sm:hidden">CSV</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
+
+    <!-- 1. Hero & KPI Telemetry Bar -->
+    <section class="bg-space-800/75 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div class="max-w-2xl">
+          <div class="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-telemetry-amber mb-2">
+            <span class="w-2 h-2 rounded-full bg-telemetry-amber animate-ping"></span>
+            <span>ARTEMIS ACCORDS SECTION 9 // HERITAGE PROTECTION</span>
+          </div>
+          <h1 class="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight leading-tight">
+            Mapping &amp; Preserving Humanity’s Off-World Heritage
+          </h1>
+          <p class="mt-3 text-slate-300 text-base sm:text-lg leading-relaxed">
+            An interactive geospatial atlas unifying NASA LRO, MRO HiRISE, and Planetary Data System records to catalog historic spacecraft and enforce anti-plume safety buffers across the Moon and Mars (1959–2026).
+          </p>
+        </div>
+
+        <!-- Live KPI Telemetry Grid -->
+        <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:w-[440px] shrink-0">
+          <div class="bg-space-950/90 border border-slate-800 rounded-xl p-4">
+            <p class="font-mono text-xs text-slate-400 uppercase">Documented Sites</p>
+            <p class="font-mono text-2xl sm:text-3xl font-bold text-telemetry-cyan mt-1">104+</p>
+            <p class="text-xs text-slate-400 mt-1">15 Featured Primary Landmarks</p>
+          </div>
+          <div class="bg-space-950/90 border border-slate-800 rounded-xl p-4">
+            <p class="font-mono text-xs text-slate-400 uppercase">Off-World Mass</p>
+            <p class="font-mono text-2xl sm:text-3xl font-bold text-telemetry-amber mt-1">200+ t</p>
+            <p class="text-xs text-slate-400 mt-1">67 Years of Spaceflight</p>
+          </div>
+          <div class="bg-space-950/90 border border-slate-800 rounded-xl p-4">
+            <p class="font-mono text-xs text-slate-400 uppercase">Celestial Bodies</p>
+            <p class="font-mono text-2xl sm:text-3xl font-bold text-white mt-1">2 Worlds</p>
+            <p class="text-xs text-slate-400 mt-1">Luna &amp; Mars Orbital Grids</p>
+          </div>
+          <div class="bg-space-950/90 border border-slate-800 rounded-xl p-4">
+            <p class="font-mono text-xs text-slate-400 uppercase">Heritage Buffers</p>
+            <p class="font-mono text-2xl sm:text-3xl font-bold text-telemetry-emerald mt-1">0.5–2 km</p>
+            <p class="text-xs text-slate-400 mt-1">Plume Sandblast Exclusion</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Filter & Control Deck -->
+    <section class="bg-space-800/75 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <!-- Celestial Body Switcher Tabs -->
+        <div class="inline-flex p-1 rounded-xl bg-space-950 border border-slate-800 self-start" role="tablist">
+          <button data-body="MOON" class="body-tab px-4 py-2 rounded-lg font-mono text-xs sm:text-sm font-bold transition bg-telemetry-cyan text-space-950 shadow">
+            <i class="fa-solid fa-moon mr-1.5"></i>THE MOON (LUNA)
+          </button>
+          <button data-body="MARS" class="body-tab px-4 py-2 rounded-lg font-mono text-xs sm:text-sm font-bold transition text-slate-300 hover:text-white">
+            <i class="fa-solid fa-globe mr-1.5"></i>MARS (ARES)
+          </button>
+          <button data-body="ALL" class="body-tab px-4 py-2 rounded-lg font-mono text-xs sm:text-sm font-bold transition text-slate-300 hover:text-white">
+            ALL ARTIFACTS
+          </button>
+        </div>
+
+        <!-- Search & Mission Type Filter -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 lg:max-w-xl">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input id="searchInput" type="text" placeholder="Search Apollo, Perseverance, NASA, ISRO, Crater..."
+              class="w-full pl-10 pr-4 py-2 rounded-xl bg-space-950 border border-slate-700 focus:border-telemetry-cyan focus:outline-none text-sm text-white placeholder-slate-500" />
+          </div>
+          <select id="typeFilter" class="px-3.5 py-2 rounded-xl bg-space-950 border border-slate-700 focus:border-telemetry-cyan focus:outline-none text-sm text-slate-200 font-mono">
+            <option value="ALL">All Mission Types</option>
+            <option value="Crewed Lander">Crewed Lander</option>
+            <option value="Rover">Rover</option>
+            <option value="Robotic Lander">Robotic Lander</option>
+            <option value="Aerial Drone">Aerial Drone</option>
+            <option value="Impactor">Impactor / Probe</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Era Presets & Year Range Slider -->
+      <div class="pt-3 border-t border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="font-mono text-xs text-slate-400 uppercase mr-1">Mission Era:</span>
+          <button data-era="1959-2026" class="era-btn px-3 py-1.5 rounded-lg font-mono text-xs border border-telemetry-cyan bg-telemetry-cyan/15 text-telemetry-cyan transition">
+            All Eras (1959–2026)
+          </button>
+          <button data-era="1959-1976" class="era-btn px-3 py-1.5 rounded-lg font-mono text-xs border border-slate-700 bg-space-950 text-slate-300 hover:border-slate-500 transition">
+            1959–1976 Space Race
+          </button>
+          <button data-era="1997-2012" class="era-btn px-3 py-1.5 rounded-lg font-mono text-xs border border-slate-700 bg-space-950 text-slate-300 hover:border-slate-500 transition">
+            1997–2012 Robotic Era
+          </button>
+          <button data-era="2013-2026" class="era-btn px-3 py-1.5 rounded-lg font-mono text-xs border border-slate-700 bg-space-950 text-slate-300 hover:border-slate-500 transition">
+            2013–2026 Modern &amp; Artemis
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3 min-w-[260px]">
+          <label for="maxYearSlider" class="font-mono text-xs text-slate-400 whitespace-nowrap">Up to Year:</label>
+          <input id="maxYearSlider" type="range" min="1959" max="2026" value="2026" class="w-full" />
+          <span id="maxYearLabel" class="font-mono text-sm font-bold text-telemetry-cyan w-12 text-right">2026</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Main Interactive Workspace: Coordinate Map + Telemetry Dossier -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Left 7 Columns: Interactive SVG Planetary Coordinate Grid -->
+      <div class="lg:col-span-7 bg-space-800/80 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 id="mapTitle" class="font-display font-bold text-xl text-white flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-telemetry-cyan"></span>
+              LUNA // EQUIRECTANGULAR COORDINATE ATLAS
+            </h2>
+            <p id="mapSubtitle" class="font-mono text-xs text-slate-400 mt-0.5">
+              Click any telemetry beacon to inspect coordinates, NASA imagery metadata &amp; Artemis buffer zone
+            </p>
+          </div>
+          <div class="flex items-center gap-3 font-mono text-xs">
+            <span class="flex items-center gap-1.5 text-telemetry-amber">
+              <span class="w-2.5 h-2.5 rounded-full bg-telemetry-amber inline-block"></span> Historic / Protected
+            </span>
+            <span class="flex items-center gap-1.5 text-telemetry-cyan">
+              <span class="w-2.5 h-2.5 rounded-full bg-telemetry-cyan inline-block"></span> Active / Modern
+            </span>
+          </div>
+        </div>
+
+        <!-- Interactive SVG Map Container -->
+        <div class="relative w-full aspect-[16/9] bg-space-950 rounded-xl border border-slate-800 overflow-hidden select-none">
+          <svg id="planetaryMap" viewBox="0 0 800 450" class="w-full h-full block" role="img" aria-label="Interactive planetary artifact coordinate map">
+            <defs>
+              <!-- Moon Terrain Radial Gradient -->
+              <radialGradient id="moonGlow" cx="50%" cy="50%" r="55%">
+                <stop offset="0%" stop-color="#1E293B" stop-opacity="0.75" />
+                <stop offset="70%" stop-color="#0F172A" stop-opacity="0.9" />
+                <stop offset="100%" stop-color="#060913" stop-opacity="1" />
+              </radialGradient>
+              <!-- Mars Terrain Radial Gradient -->
+              <radialGradient id="marsGlow" cx="50%" cy="50%" r="55%">
+                <stop offset="0%" stop-color="#451A13" stop-opacity="0.65" />
+                <stop offset="70%" stop-color="#1C1117" stop-opacity="0.9" />
+                <stop offset="100%" stop-color="#060913" stop-opacity="1" />
+              </radialGradient>
+              <!-- Buffer Zone Pattern -->
+              <pattern id="bufferHatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+                <line x1="0" y1="0" x2="0" y2="8" stroke="#F59E0B" stroke-width="1.5" stroke-opacity="0.45" />
+              </pattern>
+            </defs>
+
+            <!-- Background Fill (Updated dynamically per body) -->
+            <rect id="mapBackdrop" x="0" y="0" width="800" height="450" fill="url(#moonGlow)" />
+
+            <!-- Stylized Topographic Contours & Mare/Basin Shapes -->
+            <g id="terrainFeatures"></g>
+
+            <!-- Lat/Long Graticule Grid -->
+            <g id="graticuleGrid" stroke="#334155" stroke-width="0.7" stroke-dasharray="3 3" opacity="0.65"></g>
+
+            <!-- Major Geographic Region Labels -->
+            <g id="regionLabels" font-family="JetBrains Mono, monospace" font-size="10" fill="#64748B" text-anchor="middle"></g>
+
+            <!-- Heritage Exclusion Buffer Circles -->
+            <g id="bufferLayer"></g>
+
+            <!-- Clickable Artifact Pins -->
+            <g id="pinsLayer"></g>
+          </svg>
+
+          <!-- Live Cursor / Selected Coordinate HUD -->
+          <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+            <div class="bg-space-950/90 border border-slate-800 px-3 py-1.5 rounded-lg font-mono text-[11px] text-slate-300">
+              <span class="text-slate-500">REF:</span> <span id="datumLabel">IAU LRO LOLA SPHERICAL</span>
+            </div>
+            <div class="bg-space-950/90 border border-slate-800 px-3 py-1.5 rounded-lg font-mono text-[11px] text-telemetry-cyan">
+              VISIBLE SITES: <span id="visibleCountBadge" class="font-bold">8</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick-Select Horizontal Artifact Strip -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-mono text-xs text-slate-400 uppercase">Filtered Sites Roster (Click to Focus)</span>
+            <span id="rosterCountText" class="font-mono text-xs text-telemetry-cyan">Showing 8 of 15</span>
+          </div>
+          <div id="artifactRosterList" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-60 overflow-y-auto pr-1">
+            <!-- Populated dynamically by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right 5 Columns: Telemetry & Heritage Dossier Panel -->
+      <aside class="lg:col-span-5 bg-space-800/90 border border-slate-700/90 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-5">
+        <div class="flex items-start justify-between gap-3 border-b border-slate-800 pb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span id="dossierBodyBadge" class="font-mono text-[11px] font-bold uppercase px-2.5 py-0.5 rounded bg-telemetry-cyan/15 text-telemetry-cyan border border-telemetry-cyan/30">
+                THE MOON
+              </span>
+              <span id="dossierYearBadge" class="font-mono text-xs text-slate-400">1969</span>
+            </div>
+            <h3 id="dossierTitle" class="font-display font-extrabold text-2xl text-white mt-2">
+              Apollo 11 Tranquility Base
+            </h3>
+            <p id="dossierRegion" class="font-mono text-xs text-telemetry-amber mt-0.5">
+              Mare Tranquillitatis (Sea of Tranquility)
+            </p>
+          </div>
+
+          <button id="bookmarkBtn" class="p-2.5 rounded-xl bg-space-950 border border-slate-700 hover:border-telemetry-amber text-slate-300 hover:text-telemetry-amber transition" title="Bookmark to Heritage Watchlist">
+            <i class="fa-regular fa-bookmark"></i>
+          </button>
+        </div>
+
+        <!-- Coordinate & Hardware Spec Matrix -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-space-950 rounded-xl p-3 border border-slate-800">
+            <p class="font-mono text-[11px] text-slate-400 uppercase">Coordinates</p>
+            <p id="dossierCoords" class="font-mono text-sm font-bold text-telemetry-cyan mt-0.5">0.6741°N, 23.4730°E</p>
+          </div>
+          <div class="bg-space-950 rounded-xl p-3 border border-slate-800">
+            <p class="font-mono text-[11px] text-slate-400 uppercase">Hardware Mass</p>
+            <p id="dossierMass" class="font-mono text-sm font-bold text-white mt-0.5">2,034 kg</p>
+          </div>
+          <div class="bg-space-950 rounded-xl p-3 border border-slate-800">
+            <p class="font-mono text-[11px] text-slate-400 uppercase">Agency / Nation</p>
+            <p id="dossierAgency" class="font-mono text-sm font-bold text-slate-200 mt-0.5">NASA (USA)</p>
+          </div>
+          <div class="bg-space-950 rounded-xl p-3 border border-slate-800">
+            <p class="font-mono text-[11px] text-slate-400 uppercase">Mission Status</p>
+            <p id="dossierStatus" class="font-mono text-sm font-bold text-telemetry-amber mt-0.5">Protected Landmark</p>
+          </div>
+        </div>
+
+        <!-- Historical & Archaeological Summary -->
+        <div class="space-y-2">
+          <h4 class="font-mono text-xs uppercase tracking-wider text-slate-400">Archaeological &amp; Mission Significance</h4>
+          <p id="dossierDescription" class="text-sm text-slate-200 leading-relaxed">
+            Site of humanity’s first crewed lunar landing on July 20, 1969. Contains the Eagle Lunar Module descent stage, EASEP passive seismometer, Laser Ranging Retroreflector (still active), TV camera, bootprints, and commemorative plaque.
+          </p>
+        </div>
+
+        <!-- Hardware Inventory Tags -->
+        <div class="space-y-2">
+          <h4 class="font-mono text-xs uppercase tracking-wider text-slate-400">Documented Surface Artifacts</h4>
+          <div id="dossierArtifactsTags" class="flex flex-wrap gap-1.5">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Interactive Artemis Heritage Protection Zone Module -->
+        <div class="bg-space-950 border border-telemetry-amber/40 rounded-xl p-4 space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-shield-halved text-telemetry-amber"></i>
+              <span class="font-mono text-xs font-bold uppercase text-telemetry-amber">Artemis Heritage Buffer Zone</span>
+            </div>
+            <label class="inline-flex items-center cursor-pointer gap-2">
+              <input id="bufferToggle" type="checkbox" checked class="sr-only peer" />
+              <div class="w-10 h-5 bg-slate-700 rounded-full peer peer-checked:bg-telemetry-amber relative transition after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-space-950 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+              <span class="font-mono text-xs text-slate-300">Show on Map</span>
+            </label>
+          </div>
+
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="text-slate-400">Recommended Keep-Out Radius:</span>
+            <span id="dossierBufferRadius" class="text-white font-bold">2.0 km No-Fly / Plume Buffer</span>
+          </div>
+
+          <div class="space-y-1">
+            <div class="flex justify-between font-mono text-[11px]">
+              <span class="text-slate-400">Heritage Vulnerability &amp; Priority Score</span>
+              <span id="dossierScoreLabel" class="text-telemetry-amber font-bold">99 / 100 (CRITICAL)</span>
+            </div>
+            <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+              <div id="dossierScoreBar" class="h-full bg-gradient-to-r from-telemetry-cyan to-telemetry-amber rounded-full transition-all duration-300" style="width: 99%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NASA Open Data Source & Actions -->
+        <div class="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-800">
+          <div class="font-mono text-[11px] text-slate-400">
+            <span class="text-slate-500">DATA SOURCE:</span>
+            <span id="dossierSource" class="text-telemetry-cyan">LRO NAC QuickMap &amp; NASA PDS</span>
+          </div>
+          <button id="copyCoordsBtn" class="px-3 py-1.5 rounded-lg bg-space-950 hover:bg-slate-900 border border-slate-700 font-mono text-xs text-slate-200 flex items-center justify-center gap-1.5 transition">
+            <i class="fa-regular fa-copy text-telemetry-cyan"></i>
+            <span>Copy Telemetry</span>
+          </button>
+        </div>
+      </aside>
+
+    </section>
+
+    <!-- 4. NASA Open Data & Artemis Accords Architecture Section -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div class="bg-space-800/75 border border-slate-800 rounded-2xl p-5 space-y-2.5">
+        <div class="w-10 h-10 rounded-xl bg-telemetry-cyan/15 text-telemetry-cyan flex items-center justify-center text-lg">
+          <i class="fa-solid fa-satellite"></i>
+        </div>
+        <h3 class="font-display font-bold text-lg text-white">NASA Orbital Telemetry</h3>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          Synthesizes Lunar Reconnaissance Orbiter (LRO) Narrow Angle Camera (NAC) imagery, LOLA elevation grids, and Mars Reconnaissance Orbiter (MRO) HiRISE coordinates into a single unified spatial index.
+        </p>
+      </div>
+
+      <div class="bg-space-800/75 border border-slate-800 rounded-2xl p-5 space-y-2.5">
+        <div class="w-10 h-10 rounded-xl bg-telemetry-amber/15 text-telemetry-amber flex items-center justify-center text-lg">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 class="font-display font-bold text-lg text-white">Plume Impingement Defense</h3>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          High-velocity regolith ejecta from new commercial landers can sandblast nearby historic spacecraft. Lunar Legacy models 500 m to 2 km exclusion perimeters aligned with NASA heritage guidelines.
+        </p>
+      </div>
+
+      <div class="bg-space-800/75 border border-slate-800 rounded-2xl p-5 space-y-2.5">
+        <div class="w-10 h-10 rounded-xl bg-telemetry-emerald/15 text-telemetry-emerald flex items-center justify-center text-lg">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <h3 class="font-display font-bold text-lg text-white">Open Planetary Registry</h3>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          Built for mission planners, space archaeologists, and STEM educators. Export machine-readable JSON or CSV telemetry dossiers for GIS tools, classroom labs, and mission simulations.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-slate-800/80 mt-10 py-6 text-center font-mono text-xs text-slate-500">
+    LUNAR LEGACY // NASA SPACE APPS CHALLENGE PROJECT &bull; DATA SOURCES: NASA PDS, LRO QUICKMAP, MRO HiRISE, JPL HORIZONS
+  </footer>
+
+  <!-- Interactive Application Logic -->
+  <script>
+    /**
+     * Curated Off-World Heritage Dataset (15 Historic Landmarks on the Moon & Mars)
+     * Coordinates follow standard planetary latitude (-90 to +90) and longitude (-180 to +180).
+     */
+    const ARTIFACTS = [
+      // --- MOON ARTIFACTS ---
+      {
+        id: "luna-2",
+        name: "Luna 2 Impact Site",
+        body: "MOON",
+        year: 1959,
+        era: "1959-1976",
+        type: "Impactor",
+        agency: "Soviet Space Program (USSR)",
+        region: "Palus Putredinis / Mare Imbrium",
+        lat: 29.10,
+        lon: 0.00,
+        coordDisplay: "29.10°N, 0.00°W",
+        mass: "390 kg",
+        status: "Historic Impact Site",
+        bufferKm: 0.5,
+        heritageScore: 95,
+        source: "NASA NSSDCA & LRO Impact Catalog",
+        description: "On September 14, 1959, Luna 2 became the first human-made spacecraft to reach the surface of another celestial body, delivering metallic Soviet pennants to Mare Imbrium.",
+        hardware: ["Spherical Probe", "Metallic Pennants", "Upper Stage Booster"]
+      },
+      {
+        id: "surveyor-3",
+        name: "Surveyor 3 & Apollo 12",
+        body: "MOON",
+        year: 1967,
+        era: "1959-1976",
+        type: "Robotic Lander",
+        agency: "NASA (USA)",
+        region: "Oceanus Procellarum",
+        lat: -3.01,
+        lon: -23.42,
+        coordDisplay: "3.01°S, 23.42°W",
+        mass: "302 kg",
+        status: "Dual-Mission Heritage Site",
+        bufferKm: 1.5,
+        heritageScore: 96,
+        source: "LRO NAC QuickMap (M175428601)",
+        description: "Robotic lander that touched down in April 1967 and was famously visited 31 months later by Apollo 12 astronauts Pete Conrad and Alan Bean, who landed Intrepid just 180 meters away.",
+        hardware: ["Surveyor 3 Lander", "Intrepid Descent Stage", "ALSEP Station"]
+      },
+      {
+        id: "apollo-11",
+        name: "Apollo 11 Tranquility Base",
+        body: "MOON",
+        year: 1969,
+        era: "1959-1976",
+        type: "Crewed Lander",
+        agency: "NASA (USA)",
+        region: "Mare Tranquillitatis",
+        lat: 0.67,
+        lon: 23.47,
+        coordDisplay: "0.6741°N, 23.4730°E",
+        mass: "2,034 kg",
+        status: "Protected Landmark",
+        bufferKm: 2.0,
+        heritageScore: 99,
+        source: "LRO NAC QuickMap & NASA PDS",
+        description: "Site of humanity’s first crewed lunar landing on July 20, 1969. Contains the Eagle Lunar Module descent stage, EASEP passive seismometer, Laser Ranging Retroreflector (still active today), bootprints, and commemorative plaque.",
+        hardware: ["Eagle Descent Stage", "Laser Retroreflector (LRRR)", "EASEP Seismometer", "US Flag & Plaque"]
+      },
+      {
+        id: "lunokhod-1",
+        name: "Lunokhod 1 Rover",
+        body: "MOON",
+        year: 1970,
+        era: "1959-1976",
+        type: "Rover",
+        agency: "Soviet Space Program (USSR)",
+        region: "Mare Imbrium",
+        lat: 38.24,
+        lon: -35.00,
+        coordDisplay: "38.24°N, 35.00°W",
+        mass: "756 kg",
+        status: "Active Laser Reflector",
+        bufferKm: 1.0,
+        heritageScore: 92,
+        source: "LRO NAC & Apache Point Lunar Laser",
+        description: "First remote-controlled planetary rover in history. Deployed by Luna 17, it traversed 10.5 km across Mare Imbrium over 322 Earth days and was rediscovered by LRO in 2010.",
+        hardware: ["8-Wheeled Rover Chassis", "Luna 17 Lander", "French Laser Retroreflector"]
+      },
+      {
+        id: "apollo-15",
+        name: "Apollo 15 Hadley-Apennine",
+        body: "MOON",
+        year: 1971,
+        era: "1959-1976",
+        type: "Crewed Lander",
+        agency: "NASA (USA)",
+        region: "Palus Putredinis / Montes Apenninus",
+        lat: 26.13,
+        lon: 3.63,
+        coordDisplay: "26.1322°N, 3.6339°E",
+        mass: "2,180 kg",
+        status: "Protected Landmark",
+        bufferKm: 2.0,
+        heritageScore: 97,
+        source: "LRO NAC QuickMap & Apollo Archive",
+        description: "First J-mission featuring extended scientific stays and the inaugural Lunar Roving Vehicle (LRV-1). Also houses the 'Fallen Astronaut' aluminum sculpture and memorial plaque.",
+        hardware: ["Falcon Descent Stage", "Lunar Roving Vehicle 1", "Fallen Astronaut Memorial", "ALSEP"]
+      },
+      {
+        id: "apollo-17",
+        name: "Apollo 17 Taurus-Littrow",
+        body: "MOON",
+        year: 1972,
+        era: "1959-1976",
+        type: "Crewed Lander",
+        agency: "NASA (USA)",
+        region: "Taurus-Littrow Valley",
+        lat: 20.19,
+        lon: 30.77,
+        coordDisplay: "20.1908°N, 30.7717°E",
+        mass: "2,210 kg",
+        status: "Protected Landmark",
+        bufferKm: 2.0,
+        heritageScore: 98,
+        source: "LRO NAC QuickMap (M104318871)",
+        description: "Final crewed Apollo landing on the Moon (December 1972). Features the Challenger descent stage, LRV-3 parked east of the lander, and surface gravimeter experiments.",
+        hardware: ["Challenger Descent Stage", "Lunar Roving Vehicle 3", "ALSEP Station"]
+      },
+      {
+        id: "change-4",
+        name: "Chang'e 4 & Yutu-2",
+        body: "MOON",
+        year: 2019,
+        era: "2013-2026",
+        type: "Rover",
+        agency: "CNSA (China)",
+        region: "Von Kármán Crater (Far Side)",
+        lat: -45.46,
+        lon: 177.59,
+        coordDisplay: "45.4561°S, 177.5885°E",
+        mass: "1,200 kg",
+        status: "Active Far-Side Rover",
+        bufferKm: 1.0,
+        heritageScore: 91,
+        source: "LRO NAC Far-Side Observation",
+        description: "Achieved humanity’s first soft landing on the lunar far side inside South Pole–Aitken Basin, deploying the Yutu-2 rover which holds the longevity record for lunar surface rovers.",
+        hardware: ["Chang'e 4 Lander", "Yutu-2 Rover", "Lunar Micro Ecosystem"]
+      },
+      {
+        id: "chandrayaan-3",
+        name: "Chandrayaan-3 Shiv Shakti",
+        body: "MOON",
+        year: 2023,
+        era: "2013-2026",
+        type: "Robotic Lander",
+        agency: "ISRO (India)",
+        region: "Lunar South Polar Region",
+        lat: -69.37,
+        lon: 32.32,
+        coordDisplay: "69.373°S, 32.319°E",
+        mass: "1,752 kg",
+        status: "South Pole Landmark",
+        bufferKm: 1.0,
+        heritageScore: 93,
+        source: "LRO NAC & ISRO Telemetry",
+        description: "First spacecraft to soft-land near the Lunar South Pole (August 23, 2023), deploying the Pragyan rover and performing an unprecedented lunar hop experiment.",
+        hardware: ["Vikram Lander", "Pragyan Rover", "Laser Retroreflector Array"]
+      },
+
+      // --- MARS ARTIFACTS ---
+      {
+        id: "viking-1",
+        name: "Viking 1 Lander",
+        body: "MARS",
+        year: 1976,
+        era: "1959-1976",
+        type: "Robotic Lander",
+        agency: "NASA (USA)",
+        region: "Chryse Planitia",
+        lat: 22.48,
+        lon: -47.97,
+        coordDisplay: "22.48°N, 47.97°W",
+        mass: "572 kg",
+        status: "Thomas Mutch Memorial Station",
+        bufferKm: 1.0,
+        heritageScore: 95,
+        source: "MRO HiRISE & NASA PDS",
+        description: "First spacecraft to successfully operate long-term on the Martian surface (July 20, 1976), transmitting the first high-resolution color panoramas of Mars for over 6 Earth years.",
+        hardware: ["Viking 1 Lander", "RTG Power Units", "Back Shell & Parachute"]
+      },
+      {
+        id: "pathfinder",
+        name: "Mars Pathfinder & Sojourner",
+        body: "MARS",
+        year: 1997,
+        era: "1997-2012",
+        type: "Rover",
+        agency: "NASA / JPL (USA)",
+        region: "Ares Vallis",
+        lat: 19.13,
+        lon: -33.22,
+        coordDisplay: "19.13°N, 33.22°W",
+        mass: "370 kg",
+        status: "Carl Sagan Memorial Station",
+        bufferKm: 1.0,
+        heritageScore: 94,
+        source: "MRO HiRISE (PSP_002391_1995)",
+        description: "Demonstrated airbag-cushioned landing and deployed Sojourner, the first wheeled robotic rover to operate on another planet.",
+        hardware: ["Carl Sagan Base Station", "Sojourner Microrover", "Petal Airbags"]
+      },
+      {
+        id: "opportunity",
+        name: "Opportunity Rover (MER-B)",
+        body: "MARS",
+        year: 2004,
+        era: "1997-2012",
+        type: "Rover",
+        agency: "NASA / JPL (USA)",
+        region: "Perseverance Valley / Meridiani Planum",
+        lat: -1.95,
+        lon: -5.53,
+        coordDisplay: "1.95°S, 354.47°E",
+        mass: "185 kg",
+        status: "Historic Marathon Rover",
+        bufferKm: 1.0,
+        heritageScore: 96,
+        source: "MRO HiRISE & NASA PDS",
+        description: "Planned for a 90-sol mission, Opportunity operated for nearly 15 Earth years and drove 45.16 km (more than a marathon), uncovering key evidence of ancient liquid water.",
+        hardware: ["MER-B Rover", "Challenger Memorial Station", "Heat Shield"]
+      },
+      {
+        id: "curiosity",
+        name: "Curiosity Rover (MSL)",
+        body: "MARS",
+        year: 2012,
+        era: "1997-2012",
+        type: "Rover",
+        agency: "NASA / JPL (USA)",
+        region: "Gale Crater / Aeolis Mons",
+        lat: -4.59,
+        lon: 137.44,
+        coordDisplay: "4.5895°S, 137.4417°E",
+        mass: "899 kg",
+        status: "Active Nuclear Rover",
+        bufferKm: 1.5,
+        heritageScore: 94,
+        source: "MRO HiRISE & JPL Midnight Planet",
+        description: "Car-sized nuclear-powered mobile chemistry laboratory ascending Mount Sharp in Gale Crater, proving Mars once possessed habitable freshwater lake environments.",
+        hardware: ["MSL Curiosity Rover", "Bradbury Landing Skycrane", "SAM Chemistry Lab"]
+      },
+      {
+        id: "insight",
+        name: "InSight Geophysical Lander",
+        body: "MARS",
+        year: 2018,
+        era: "2013-2026",
+        type: "Robotic Lander",
+        agency: "NASA / CNES / DLR",
+        region: "Elysium Planitia",
+        lat: 4.50,
+        lon: 135.62,
+        coordDisplay: "4.5024°N, 135.6234°E",
+        mass: "358 kg",
+        status: "Seismic Heritage Site",
+        bufferKm: 0.8,
+        heritageScore: 89,
+        source: "MRO HiRISE & NASA PDS",
+        description: "First mission dedicated to probing the deep interior of Mars, detecting over 1,300 marsquakes and measuring the thickness of the Martian crust and liquid core.",
+        hardware: ["InSight Lander", "SEIS Dome Seismometer", "HP3 Mole"]
+      },
+      {
+        id: "perseverance",
+        name: "Perseverance Rover (Mars 2020)",
+        body: "MARS",
+        year: 2021,
+        era: "2013-2026",
+        type: "Rover",
+        agency: "NASA / JPL (USA)",
+        region: "Jezero Crater Delta",
+        lat: 18.44,
+        lon: 77.45,
+        coordDisplay: "18.4447°N, 77.4508°E",
+        mass: "1,025 kg",
+        status: "Active Sample-Caching Rover",
+        bufferKm: 2.0,
+        heritageScore: 98,
+        source: "MRO HiRISE & NASA Mars 2020 API",
+        description: "Exploring an ancient river delta in Jezero Crater to seek signs of ancient microbial life and caching sealed core samples at Three Forks Depot for future Mars Sample Return.",
+        hardware: ["Perseverance Rover", "Three Forks Sample Depot", "MOXIE Oxygen Generator"]
+      },
+      {
+        id: "ingenuity",
+        name: "Ingenuity Mars Helicopter",
+        body: "MARS",
+        year: 2021,
+        era: "2013-2026",
+        type: "Aerial Drone",
+        agency: "NASA / JPL (USA)",
+        region: "Valinor Hills / Jezero Crater",
+        lat: 18.49,
+        lon: 77.40,
+        coordDisplay: "18.49°N, 77.40°E",
+        mass: "1.8 kg",
+        status: "Wright Brothers Field Landmark",
+        bufferKm: 1.0,
+        heritageScore: 97,
+        source: "MRO HiRISE & JPL Flight Log",
+        description: "Achieved the first powered, controlled aerodynamic flight on another planet on April 19, 2021—completing 72 flights across Mars and carrying a swatch of fabric from the 1903 Wright Flyer.",
+        hardware: ["Coaxial Rotorcraft", "Wright Flyer Fabric Swatch", "Solar Array"]
+      }
+    ];
+
+    // Application State
+    const state = {
+      selectedBody: "MOON", // "MOON" | "MARS" | "ALL"
+      searchQuery: "",
+      missionType: "ALL",
+      era: "1959-2026",
+      maxYear: 2026,
+      selectedArtifactId: "apollo-11",
+      showBufferZones: true,
+      bookmarkedIds: new Set(["apollo-11", "perseverance"])
+    };
+
+    // DOM Elements
+    const bodyTabs = document.querySelectorAll(".body-tab");
+    const eraBtns = document.querySelectorAll(".era-btn");
+    const searchInput = document.getElementById("searchInput");
+    const typeFilter = document.getElementById("typeFilter");
+    const maxYearSlider = document.getElementById("maxYearSlider");
+    const maxYearLabel = document.getElementById("maxYearLabel");
+    const bufferToggle = document.getElementById("bufferToggle");
+
+    // SVG Layers
+    const mapBackdrop = document.getElementById("mapBackdrop");
+    const terrainFeatures = document.getElementById("terrainFeatures");
+    const graticuleGrid = document.getElementById("graticuleGrid");
+    const regionLabels = document.getElementById("regionLabels");
+    const bufferLayer = document.getElementById("bufferLayer");
+    const pinsLayer = document.getElementById("pinsLayer");
+
+    // Helper: Toast Notification
+    let toastTimer = null;
+    function showToast(message) {
+      const banner = document.getElementById("toastBanner");
+      const msgEl = document.getElementById("toastMessage");
+      msgEl.textContent = message;
+      banner.classList.remove("hidden");
+      requestAnimationFrame(() => {
+        banner.classList.remove("translate-y-4", "opacity-0");
+      });
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        banner.classList.add("translate-y-4", "opacity-0");
+        setTimeout(() => banner.classList.add("hidden"), 300);
+      }, 3000);
+    }
+
+    // Helper: Convert Lat/Lon to 800x450 SVG Coordinates
+    function projectCoords(lat, lon) {
+      const x = ((lon + 180) / 360) * 800;
+      const y = ((90 - lat) / 180) * 450;
+      return { x, y };
+    }
+
+    // Build Static Lat/Long Graticule Lines
+    function initGraticule() {
+      let lines = "";
+      for (let lon = -150; lon <= 150; lon += 30) {
+        const x = ((lon + 180) / 360) * 800;
+        lines += `<line x1="${x}" y1="0" x2="${x}" y2="450" />`;
+      }
+      for (let lat = -60; lat <= 60; lat += 30) {
+        const y = ((90 - lat) / 180) * 450;
+        const isEquator = lat === 0;
+        lines += `<line x1="0" y1="${y}" x2="800" y2="${y}" ${isEquator ? 'stroke="#475569" stroke-width="1.1" stroke-dasharray="none"' : ''} />`;
+      }
+      graticuleGrid.innerHTML = lines;
+    }
+
+    // Render Stylized Planetary Terrain & Region Labels
+    function renderTerrain(activeBody) {
+      const displayBody = activeBody === "MARS" ? "MARS" : "MOON";
+      const mapTitle = document.getElementById("mapTitle");
+      const datumLabel = document.getElementById("datumLabel");
+
+      if (displayBody === "MOON") {
+        mapBackdrop.setAttribute("fill", "url(#moonGlow)");
+        mapTitle.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-telemetry-cyan"></span> LUNA // EQUIRECTANGULAR COORDINATE ATLAS`;
+        datumLabel.textContent = "IAU LRO LOLA SPHERICAL (R = 1737.4 KM)";
+
+        terrainFeatures.innerHTML = `
+          <ellipse cx="330" cy="185" rx="85" ry="68" fill="#0B1120" stroke="#1E293B" stroke-width="1.2" opacity="0.85" />
+          <ellipse cx="405" cy="145" rx="58" ry="44" fill="#0B1120" stroke="#1E293B" stroke-width="1.2" opacity="0.85" />
+          <ellipse cx="465" cy="210" rx="52" ry="40" fill="#0B1120" stroke="#1E293B" stroke-width="1.2" opacity="0.85" />
+          <ellipse cx="515" cy="175" rx="34" ry="26" fill="#0B1120" stroke="#1E293B" stroke-width="1" opacity="0.8" />
+          <circle cx="375" cy="332" r="24" fill="none" stroke="#334155" stroke-width="1" stroke-dasharray="4 3" />
+          <ellipse cx="745" cy="340" rx="55" ry="45" fill="#0B1120" stroke="#1E293B" stroke-width="1" opacity="0.7" />
+        `;
+
+        regionLabels.innerHTML = `
+          <text x="325" y="195">OCEANUS PROCELLARUM</text>
+          <text x="400" y="135">MARE IMBRIUM</text>
+          <text x="468" y="232">MARE TRANQUILLITATIS</text>
+          <text x="375" y="366">TYCHO CRATER</text>
+          <text x="472" y="418">LUNAR SOUTH POLE (ARTEMIS ZONE)</text>
+          <text x="720" y="345">SOUTH POLE-AITKEN</text>
+        `;
+      } else {
+        mapBackdrop.setAttribute("fill", "url(#marsGlow)");
+        mapTitle.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-telemetry-amber"></span> MARS // AREOGRAPHIC COORDINATE ATLAS`;
+        datumLabel.textContent = "IAU MOLA AREOID DATUM (R = 3396.2 KM)";
+
+        terrainFeatures.innerHTML = `
+          <circle cx="215" cy="180" r="46" fill="#2A1215" stroke="#7C2D12" stroke-width="1.2" opacity="0.75" />
+          <path d="M 275 245 Q 340 255 410 242" fill="none" stroke="#7C2D12" stroke-width="6" stroke-linecap="round" opacity="0.65" />
+          <ellipse cx="560" cy="325" rx="68" ry="45" fill="#180D14" stroke="#7C2D12" stroke-width="1.2" opacity="0.8" />
+          <ellipse cx="695" cy="195" rx="60" ry="48" fill="#2A1215" stroke="#7C2D12" stroke-width="1.2" opacity="0.7" />
+        `;
+
+        regionLabels.innerHTML = `
+          <text x="215" y="184" fill="#9A3412">OLYMPUS MONS</text>
+          <text x="342" y="268" fill="#9A3412">VALLES MARINERIS</text>
+          <text x="305" y="160" fill="#9A3412">CHRYSE PLANITIA</text>
+          <text x="560" y="330" fill="#9A3412">HELLAS PLANITIA</text>
+          <text x="695" y="198" fill="#9A3412">ELYSIUM PLANITIA</text>
+          <text x="572" y="168" fill="#9A3412">JEZERO / ISIDIS</text>
+        `;
+      }
+    }
+
+    // Filter Artifacts Based on Current State
+    function getFilteredArtifacts() {
+      return ARTIFACTS.filter((item) => {
+        if (state.selectedBody !== "ALL" && item.body !== state.selectedBody) return false;
+        if (state.missionType !== "ALL" && item.type !== state.missionType) return false;
+        if (item.year > state.maxYear) return false;
+
+        if (state.era !== "1959-2026") {
+          const [startStr, endStr] = state.era.split("-");
+          if (item.year < Number(startStr) || item.year > Number(endStr)) return false;
+        }
+
+        if (state.searchQuery.trim() !== "") {
+          const q = state.searchQuery.toLowerCase();
+          const haystack = `${item.name} ${item.region} ${item.agency} ${item.type} ${item.year}`.toLowerCase();
+          if (!haystack.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    // Render Map Pins, Buffer Zones, and Roster Cards
+    function renderAll() {
+      const filtered = getFilteredArtifacts();
+      const currentSelected = ARTIFACTS.find((a) => a.id === state.selectedArtifactId) || filtered[0] || ARTIFACTS[0];
+      if (currentSelected && currentSelected.id !== state.selectedArtifactId) {
+        state.selectedArtifactId = currentSelected.id;
+      }
+
+      const activeMapBody = state.selectedBody === "ALL" ? currentSelected.body : state.selectedBody;
+      renderTerrain(activeMapBody);
+
+      // Filter pins to those matching the currently rendered celestial globe
+      const mapArtifacts = filtered.filter((a) => a.body === activeMapBody);
+
+      document.getElementById("visibleCountBadge").textContent = mapArtifacts.length;
+      document.getElementById("rosterCountText").textContent = `Showing ${filtered.length} of ${ARTIFACTS.length}`;
+
+      // Render Heritage Buffer Circles & Pins on SVG
+      let buffersMarkup = "";
+      let pinsMarkup = "";
+
+      mapArtifacts.forEach((art) => {
+        const { x, y } = projectCoords(art.lat, art.lon);
+        const isSelected = art.id === state.selectedArtifactId;
+        const isModern = art.year >= 2012;
+        const pinColor = isModern ? "#38BDF8" : "#F59E0B";
+
+        if (state.showBufferZones) {
+          const radiusPx = Math.max(12, art.bufferKm * 11);
+          buffersMarkup += `
+            <circle cx="${x}" cy="${y}" r="${radiusPx}"
+              fill="url(#bufferHatch)"
+              stroke="#F59E0B"
+              stroke-width="${isSelected ? 1.6 : 0.8}"
+              stroke-dasharray="3 2"
+              opacity="${isSelected ? 0.95 : 0.45}" />
+          `;
+        }
+
+        pinsMarkup += `
+          <g class="cursor-pointer group" onclick="selectArtifact('${art.id}')">
+            ${isSelected ? `<circle cx="${x}" cy="${y}" r="14" fill="none" stroke="${pinColor}" stroke-width="2" class="pin-pulse" />` : ""}
+            <circle cx="${x}" cy="${y}" r="${isSelected ? 7.5 : 5.5}" fill="${pinColor}" stroke="#060913" stroke-width="2" />
+            <rect x="${x + 9}" y="${y - 10}" width="${art.name.length * 5.8 + 12}" height="18" rx="4"
+              fill="#060913" fill-opacity="${isSelected ? '0.95' : '0.75'}"
+              stroke="${isSelected ? pinColor : '#1E293B'}" stroke-width="1" />
+            <text x="${x + 15}" y="${y + 2.5}" font-family="JetBrains Mono, monospace" font-size="9.5"
+              font-weight="${isSelected ? '700' : '500'}" fill="${isSelected ? '#FFFFFF' : '#CBD5E1'}">
+              ${art.name}
+            </text>
+          </g>
+        `;
+      });
+
+      bufferLayer.innerHTML = buffersMarkup;
+      pinsLayer.innerHTML = pinsMarkup;
+
+      // Render Roster Cards below Map
+      const rosterEl = document.getElementById("artifactRosterList");
+      if (filtered.length === 0) {
+        rosterEl.innerHTML = `
+          <div class="col-span-full bg-space-950 border border-slate-800 rounded-xl p-4 text-center font-mono text-xs text-slate-400">
+            No off-world artifacts match your current filter criteria. Try resetting the year slider or search query.
+          </div>
+        `;
+      } else {
+        rosterEl.innerHTML = filtered.map((art) => {
+          const isSelected = art.id === state.selectedArtifactId;
+          return `
+            <button onclick="selectArtifact('${art.id}')"
+              class="text-left p-3 rounded-xl border transition flex items-center justify-between gap-2 ${
+                isSelected
+                  ? "bg-telemetry-cyan/15 border-telemetry-cyan text-white"
+                  : "bg-space-950/90 border-slate-800 hover:border-slate-600 text-slate-200"
+              }">
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-mono text-[10px] px-1.5 py-0.5 rounded ${
+                    art.body === "MOON" ? "bg-slate-800 text-telemetry-cyan" : "bg-orange-950/70 text-telemetry-amber"
+                  }">${art.body}</span>
+                  <span class="font-mono text-[11px] text-slate-400">${art.year}</span>
+                </div>
+                <p class="font-bold text-sm truncate mt-1">${art.name}</p>
+              </div>
+              <span class="font-mono text-[11px] text-slate-400 shrink-0">${art.coordDisplay.split(",")[0]}</span>
+            </button>
+          `;
+        }).join("");
+      }
+
+      // Render Right-Hand Dossier Panel
+      if (currentSelected) {
+        renderDossier(currentSelected);
+      }
+    }
+
+    function renderDossier(art) {
+      document.getElementById("dossierBodyBadge").textContent = art.body === "MOON" ? "THE MOON (LUNA)" : "MARS (ARES)";
+      document.getElementById("dossierYearBadge").textContent = `LANDED ${art.year} // ${art.type.toUpperCase()}`;
+      document.getElementById("dossierTitle").textContent = art.name;
+      document.getElementById("dossierRegion").textContent = art.region;
+      document.getElementById("dossierCoords").textContent = art.coordDisplay;
+      document.getElementById("dossierMass").textContent = art.mass;
+      document.getElementById("dossierAgency").textContent = art.agency;
+      document.getElementById("dossierStatus").textContent = art.status;
+      document.getElementById("dossierDescription").textContent = art.description;
+      document.getElementById("dossierBufferRadius").textContent = `${art.bufferKm.toFixed(1)} km No-Fly / Plume Buffer`;
+      document.getElementById("dossierScoreLabel").textContent = `${art.heritageScore} / 100 (HIGH PRIORITY)`;
+      document.getElementById("dossierScoreBar").style.width = `${art.heritageScore}%`;
+      document.getElementById("dossierSource").textContent = art.source;
+
+      document.getElementById("dossierArtifactsTags").innerHTML = art.hardware
+        .map((hw) => `<span class="font-mono text-xs px-2.5 py-1 rounded-lg bg-space-950 border border-slate-700 text-slate-200">${hw}</span>`)
+        .join("");
+
+      const bookmarkIcon = document.querySelector("#bookmarkBtn i");
+      if (state.bookmarkedIds.has(art.id)) {
+        bookmarkIcon.className = "fa-solid fa-bookmark text-telemetry-amber";
+      } else {
+        bookmarkIcon.className = "fa-regular fa-bookmark";
+      }
+    }
+
+    // Global Selection Handler
+    window.selectArtifact = function (id) {
+      state.selectedArtifactId = id;
+      renderAll();
+    };
+
+    // Event Listeners: Body Tabs
+    bodyTabs.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.selectedBody = btn.dataset.body;
+        bodyTabs.forEach((b) => {
+          b.className = "body-tab px-4 py-2 rounded-lg font-mono text-xs sm:text-sm font-bold transition text-slate-300 hover:text-white";
+        });
+        btn.className = "body-tab px-4 py-2 rounded-lg font-mono text-xs sm:text-sm font-bold transition bg-telemetry-cyan text-space-950 shadow";
+
+        const firstMatch = getFilteredArtifacts()[0];
+        if (firstMatch) state.selectedArtifactId = firstMatch.id;
+        renderAll();
+      });
+    });
+
+    // Event Listeners: Era Presets
+    eraBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.era = btn.dataset.era;
+        const endYear = Number(state.era.split("-")[1]);
+        state.maxYear = endYear;
+        maxYearSlider.value = endYear;
+        maxYearLabel.textContent = endYear;
+
+        eraBtns.forEach((b) => {
+          b.className = "era-btn px-3 py-1.5 rounded-lg font-mono text-xs border border-slate-700 bg-space-950 text-slate-300 hover:border-slate-500 transition";
+        });
+        btn.className = "era-btn px-3 py-1.5 rounded-lg font-mono text-xs border border-telemetry-cyan bg-telemetry-cyan/15 text-telemetry-cyan transition";
+        renderAll();
+      });
+    });
+
+    // Search, Type, Year Slider, Buffer Toggle
+    searchInput.addEventListener("input", (e) => {
+      state.searchQuery = e.target.value;
+      renderAll();
+    });
+
+    typeFilter.addEventListener("change", (e) => {
+      state.missionType = e.target.value;
+      renderAll();
+    });
+
+    maxYearSlider.addEventListener("input", (e) => {
+      state.maxYear = Number(e.target.value);
+      maxYearLabel.textContent = state.maxYear;
+      renderAll();
+    });
+
+    bufferToggle.addEventListener("change", (e) => {
+      state.showBufferZones = e.target.checked;
+      renderAll();
+    });
+
+    // Bookmark Toggle
+    document.getElementById("bookmarkBtn").addEventListener("click", () => {
+      const id = state.selectedArtifactId;
+      if (state.bookmarkedIds.has(id)) {
+        state.bookmarkedIds.delete(id);
+        showToast("Removed artifact from Heritage Watchlist.");
+      } else {
+        state.bookmarkedIds.add(id);
+        showToast("Saved artifact to Heritage Watchlist.");
+      }
+      renderAll();
+    });
+
+    // Copy Telemetry to Clipboard (Using execCommand fallback per iframe rules)
+    document.getElementById("copyCoordsBtn").addEventListener("click", () => {
+      const art = ARTIFACTS.find((a) => a.id === state.selectedArtifactId);
+      if (!art) return;
+      const summary = `LUNAR LEGACY // ${art.name} (${art.body}, ${art.year}) | Coords: ${art.coordDisplay} | Buffer: ${art.bufferKm} km | Source: ${art.source}`;
+      const tempInput = document.createElement("textarea");
+      tempInput.value = summary;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempInput);
+      showToast(`Copied telemetry for ${art.name}`);
+    });
+
+    // Export Filtered Registry as JSON
+    document.getElementById("exportJsonBtn").addEventListener("click", () => {
+      const data = getFilteredArtifacts();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `lunar-legacy-registry-${state.selectedBody.toLowerCase()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`Exported ${data.length} artifacts to JSON.`);
+    });
+
+    // Export Filtered Registry as CSV
+    document.getElementById("exportCsvBtn").addEventListener("click", () => {
+      const data = getFilteredArtifacts();
+      const headers = ["ID", "Name", "Body", "Year", "Type", "Agency", "Region", "Latitude", "Longitude", "Mass", "Buffer_km", "Heritage_Score"];
+      const rows = data.map((d) =>
+        [d.id, `"${d.name}"`, d.body, d.year, `"${d.type}"`, `"${d.agency}"`, `"${d.region}"`, d.lat, d.lon, `"${d.mass}"`, d.bufferKm, d.heritageScore].join(",")
+      );
+      const csvContent = [headers.join(","), ...rows].join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `lunar-legacy-registry-${state.selectedBody.toLowerCase()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`Exported ${data.length} artifacts to CSV.`);
+    });
+
+    // Initialize Application on Load
+    window.addEventListener("DOMContentLoaded", () => {
+      initGraticule();
+      renderAll();
+    });
+  </script>
+</body>
+</html>
